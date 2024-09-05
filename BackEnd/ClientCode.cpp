@@ -21,6 +21,8 @@ using namespace std;
 static char ClientName [100]="";
 ClientMessage ClientMessageToBeSent;
 ClientMessage ClientMessageReceived;
+int MaxLength = 52000;
+bool FinishedReceivingNamesFromServer = true;
 
 // #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
 
@@ -101,26 +103,84 @@ void SendToServerMessage(SOCKET ServerSocket, int MaxLength, string Message)
 }
 
 
+void SentPrivateMessage(SOCKET ServerSocket, string Message, string ReceivingClientName)
+{
+  ClientMessageToBeSent.SetMessage(Message);
+  ClientMessageToBeSent.SetPrivateMessageFlag(true);
+  char Buffer[52000];
+  int Length = ClientMessageToBeSent.Serialize(Buffer);
+  int ByteCount = send(ServerSocket, Buffer, Length, 0);
+
+  if(ByteCount > 0)
+    {
+      //			  cout<<"Sent Successfully"<<endl;
+    }
+  else
+    {
+      cout<<"Send Failed"<<endl;
+      WSACleanup();
+    }
+  ClientMessageToBeSent.SetPrivateMessageFlag(false);
+}
+
 
 
 string ReceiveFromServer(SOCKET ServerSocket, int MaxLength) //TODO we can make a parameter to receive the incoming string if we want to
 {
   while(1)
     {
-	  char Buffer[MaxLength + 100];
-	  int ByteCount = recv(ServerSocket, Buffer, (MaxLength + 100), 0);
+        if( FinishedReceivingNamesFromServer == false)
+        {
+            continue;
+        }
+        char Buffer[MaxLength + 100];
+        int ByteCount = recv(ServerSocket, Buffer, (MaxLength + 100), 0);
+        // N.B : to handle that we are blocked here till we receive message from server, so we will send dummy message from server to unblock the above statement and receive all the users in the
+        // function ReceiveMembersNamesFromServer
+        if( FinishedReceivingNamesFromServer == false)
+        {
+            continue;
+        }
 
-	  if(ByteCount > 0)
-	  {
-		  ClientMessageReceived.Deserialize(Buffer);
-		  cout<<ClientMessageReceived.GetName()<<" : "<<ClientMessageReceived.GetClientMessage()<<endl;
-          return ( ClientMessageReceived.GetName() + " : " + ClientMessageReceived.GetClientMessage() );
-	  }
-      else
-	{
-//	  cout<<"Receiving Failed"<<endl;
-	  WSACleanup();
-	}
+        if(ByteCount > 0)
+        {
+            ClientMessageReceived.Deserialize(Buffer);
+            return ( ClientMessageReceived.GetName() + " : " + ClientMessageReceived.GetClientMessage() );
+        }
+        else
+        {
+            //	  cout<<"Receiving Failed"<<endl;
+            WSACleanup();
+        }
+
+    }
+}
+
+vector<string> ReceiveMembersNamesFromServer(SOCKET ServerSocket)
+{
+    FinishedReceivingNamesFromServer = false;
+    char Buffer[MaxLength];
+    vector<string> Result;
+    ClientMessageToBeSent.SetMessage("");
+    ClientMessageToBeSent.SetRequestingMembersUpdate(true);
+    int Length = ClientMessageToBeSent.Serialize(Buffer);
+    int ByteCount = send(ServerSocket, Buffer, Length, 0);
+    while(1)
+    {
+        int ByteCount = recv(ServerSocket, Buffer, MaxLength, 0);
+
+        if(ByteCount > 0)
+        {
+            ClientMessageReceived.Deserialize(Buffer);
+            if(ClientMessageReceived.GetClientMessage() == "EndOfClients")
+            {
+                ClientMessageToBeSent.SetRequestingMembersUpdate(false);
+                FinishedReceivingNamesFromServer = true;
+                return Result;
+            }
+
+            Result.push_back(ClientMessageReceived.GetName());
+        }
 
     }
 }

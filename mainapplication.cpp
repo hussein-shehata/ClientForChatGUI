@@ -103,7 +103,6 @@ bool MainApplication::OpenCredentialsDialog()
 
 void MainApplication:: on_ConnectButton_clicked()
 {
-    std::cout<<"I Reached here";
     int ret = StartConnection(ClientSocket);
     if(ret == -1)
     {
@@ -146,7 +145,6 @@ void MainApplication::UpdateViewChat()
         {
             continue;
         }
-        std::cout<<"Updating"<<endl;
         MessageToBeDisplayed = QString::fromStdString(ReceiveFromServer(ClientSocket,52000)) ;
         AddStringToViewChat(MessageToBeDisplayed);
     }
@@ -161,4 +159,16 @@ void MainApplication::AddStringToViewChat(const QString& Message)
 
 
 
+
+
+void MainApplication::on_pushButton_clicked()
+{
+    vector<string> Result;
+   Result = ReceiveMembersNamesFromServer(ClientSocket);
+    std::cout<<"abl el for loop"<<endl;
+    for (auto ClientName: Result)
+   {
+       std::cout<<ClientName<<std::endl;
+    }
+}
 
