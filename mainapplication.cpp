@@ -139,14 +139,38 @@ void MainApplication::on_SendButton_clicked()
 
 void MainApplication::UpdateViewChat()
 {
+    Flags ReceivedFlags ={.NewNameFlag = 0,
+                           .NewAvatarFlag = 0,
+                           .PrivateMessageFlag = 0,
+                            .RequestingMembersUpdate = 0,
+                           .NotifyingNewMemberFlag = 0};
     while(1)
     {
         if(ClientIsConnected == false)
         {
             continue;
         }
-        MessageToBeDisplayed = QString::fromStdString(ReceiveFromServer(ClientSocket,52000)) ;
+        MessageToBeDisplayed = QString::fromStdString(ReceiveFromServer(ClientSocket,52000, ReceivedFlags)) ;
+        if(ReceivedFlags.NotifyingNewMemberFlag == 1)
+        {
+            UpdateMemberList();
+        }
+        if(ReceivedFlags.PrivateMessageFlag == 1)
+        {
+            MessageToBeDisplayed = "PRIVATE FROM " + MessageToBeDisplayed;
+        }
         AddStringToViewChat(MessageToBeDisplayed);
+    }
+}
+
+void MainApplication::UpdateMemberList()
+{
+    vector<string> Result;
+    Result = ReceiveMembersNamesFromServer(ClientSocket);
+    ui->ServerMembersList->clear();
+    for (auto ClientName: Result)
+    {
+        ui->ServerMembersList->addItem(QString::fromStdString(ClientName));
     }
 }
 
@@ -159,16 +183,12 @@ void MainApplication::AddStringToViewChat(const QString& Message)
 
 
 
-
-
-void MainApplication::on_pushButton_clicked()
+void MainApplication::on_SendPrivateMessageButton_clicked()
 {
-    vector<string> Result;
-   Result = ReceiveMembersNamesFromServer(ClientSocket);
-    std::cout<<"abl el for loop"<<endl;
-    for (auto ClientName: Result)
-   {
-       std::cout<<ClientName<<std::endl;
-    }
+
+    ui->ServerMembersList->currentItem();
+    string ReceivingEndName = ui->ServerMembersList->currentItem()->text().toStdString();
+    SentPrivateMessage(ClientSocket,"Hello this is private",ReceivingEndName);
+
 }
 

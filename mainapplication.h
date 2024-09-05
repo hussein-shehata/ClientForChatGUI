@@ -33,12 +33,13 @@ private slots:
 
     void on_SendButton_clicked();
 
-    void on_pushButton_clicked();
+    void on_SendPrivateMessageButton_clicked();
 
 private:
     int StartConnection(SOCKET& ClientSocket);
     int EndConnection();
     void AddStringToViewChat(const QString& Message);
+    void UpdateMemberList();
     bool ClientIsConnected = false;
     std::thread* Worker1;
 

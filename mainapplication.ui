@@ -159,7 +159,7 @@
         <string>Server Members</string>
        </property>
       </widget>
-      <widget class="QPushButton" name="pushButton">
+      <widget class="QPushButton" name="SendPrivateMessageButton">
        <property name="geometry">
         <rect>
          <x>520</x>

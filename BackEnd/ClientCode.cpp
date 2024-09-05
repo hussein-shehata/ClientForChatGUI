@@ -107,6 +107,7 @@ void SentPrivateMessage(SOCKET ServerSocket, string Message, string ReceivingCli
 {
   ClientMessageToBeSent.SetMessage(Message);
   ClientMessageToBeSent.SetPrivateMessageFlag(true);
+  ClientMessageToBeSent.SetRecevingEndName(ReceivingClientName);
   char Buffer[52000];
   int Length = ClientMessageToBeSent.Serialize(Buffer);
   int ByteCount = send(ServerSocket, Buffer, Length, 0);
@@ -125,26 +126,19 @@ void SentPrivateMessage(SOCKET ServerSocket, string Message, string ReceivingCli
 
 
 
-string ReceiveFromServer(SOCKET ServerSocket, int MaxLength) //TODO we can make a parameter to receive the incoming string if we want to
+string ReceiveFromServer(SOCKET ServerSocket, int MaxLength, Flags& ReceivedFlags) //TODO we can make a parameter to receive the incoming string if we want to
 {
   while(1)
     {
-        if( FinishedReceivingNamesFromServer == false)
-        {
-            continue;
-        }
         char Buffer[MaxLength + 100];
         int ByteCount = recv(ServerSocket, Buffer, (MaxLength + 100), 0);
         // N.B : to handle that we are blocked here till we receive message from server, so we will send dummy message from server to unblock the above statement and receive all the users in the
         // function ReceiveMembersNamesFromServer
-        if( FinishedReceivingNamesFromServer == false)
-        {
-            continue;
-        }
 
         if(ByteCount > 0)
         {
             ClientMessageReceived.Deserialize(Buffer);
+            ReceivedFlags = ClientMessageReceived.GetFlags();
             return ( ClientMessageReceived.GetName() + " : " + ClientMessageReceived.GetClientMessage() );
         }
         else
@@ -178,8 +172,14 @@ vector<string> ReceiveMembersNamesFromServer(SOCKET ServerSocket)
                 FinishedReceivingNamesFromServer = true;
                 return Result;
             }
-
-            Result.push_back(ClientMessageReceived.GetName());
+            else if (ClientMessageReceived.GetRequestingMembersUpdate() == 1)
+            {
+                Result.push_back(ClientMessageReceived.GetName());
+            }
+            else
+            {
+              
+            }
         }
 
     }

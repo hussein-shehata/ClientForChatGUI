@@ -19,6 +19,7 @@ typedef struct
 		unsigned char NewAvatarFlag : 1;
 		unsigned char PrivateMessageFlag :1;
 		unsigned char RequestingMembersUpdate :1;
+		unsigned char NotifyingNewMemberFlag :1;
 
 }Flags;
 
@@ -49,9 +50,13 @@ public:
 	unsigned char GetRequestingMembersUpdate(void);
 	void SetRequestingMembersUpdate(bool);
 
+	unsigned char GetNotifyingNewMemberFlag(void);
+	void SetNotifyingNewMemberFlag(bool);
+
 	int Serialize(char* Buffer);
 	void Deserialize(const char* Buffer);
 	void SetFlags(Flags ReveivedMessageFlags);
+	Flags GetFlags(void);
 
 };
 
