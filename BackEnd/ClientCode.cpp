@@ -18,7 +18,7 @@
 #include "ClientMessageClass.hpp"
 using namespace std;
 
-static char ClientName [100]="";
+// static char ClientName [100]="";
 ClientMessage ClientMessageToBeSent;
 ClientMessage ClientMessageReceived;
 int MaxLength = 52000;
@@ -78,10 +78,19 @@ void SendToServer(SOCKET ServerSocket, int MaxLength)
 
 void SendToServerMessage(SOCKET ServerSocket, int MaxLength, string Message)
 {
-
+    if(Message == "#Exit")
+    {
+        ClientMessageToBeSent.SetExitFlag(true);
+    }
 	ClientMessageToBeSent.SetMessage(Message);
+    cout<<"Message to Be Sent"<<Message<<endl;
 	char Buffer[52000];
 	int Length = ClientMessageToBeSent.Serialize(Buffer);
+
+    if(Message == "#Exit")
+    {
+        ClientMessageToBeSent.SetExitFlag(false);
+    }
 
 	//      if(Buffer[ClientNameLength + 3 ] == '\n' ||  Buffer[ClientNameLength + 3 ] == '\0')
 	//	{
@@ -93,11 +102,11 @@ void SendToServerMessage(SOCKET ServerSocket, int MaxLength, string Message)
 
 	if(ByteCount > 0)
 	{
-//			  cout<<"Sent Successfully"<<endl;
+        cout<<"Sent Successfully"<<endl;
 	}
 	else
 	{
-		  cout<<"Send Failed"<<endl;
+        cout<<"Send Failed"<<endl;
 		WSACleanup();
 	}
 }
@@ -118,7 +127,7 @@ void SentPrivateMessage(SOCKET ServerSocket, string Message, string ReceivingCli
     }
   else
     {
-      cout<<"Send Failed"<<endl;
+      cout<<"Send Private Message Failed"<<endl;
       WSACleanup();
     }
   ClientMessageToBeSent.SetPrivateMessageFlag(false);

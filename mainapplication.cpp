@@ -19,18 +19,20 @@ MainApplication::MainApplication(QWidget *parent)
 
 MainApplication::~MainApplication()
 {
-    delete Worker1;
     EndConnection();
+    delete Worker1;
     delete ui;
 }
 
 int MainApplication::EndConnection()
 {
-    shutdown(ClientSocket, SD_BOTH); // Disable further sends and receives
-    closesocket(ClientSocket);       // Close the socket descriptor
-
+    // shutdown(ClientSocket, SD_BOTH); // Disable further sends and receives
+    // closesocket(ClientSocket);       // Close the socket descriptor
+    QString ClientMessage = "#Exit";
+    SendToServerMessage(ClientSocket, 52000, ClientMessage.toStdString());
+    closesocket(ClientSocket);
     // Cleanup Winsock
-    WSACleanup();
+    // WSACleanup();
 }
 
 int MainApplication::StartConnection(SOCKET& clientSocket)
@@ -140,10 +142,11 @@ void MainApplication::on_SendButton_clicked()
 void MainApplication::UpdateViewChat()
 {
     Flags ReceivedFlags ={.NewNameFlag = 0,
-                           .NewAvatarFlag = 0,
-                           .PrivateMessageFlag = 0,
+                            .NewAvatarFlag = 0,
+                            .PrivateMessageFlag = 0,
                             .RequestingMembersUpdate = 0,
-                           .NotifyingNewMemberFlag = 0};
+                            .NotifyingNewMemberFlag = 0,
+                            .ExitFlag = 0};
     while(1)
     {
         if(ClientIsConnected == false)
@@ -190,5 +193,11 @@ void MainApplication::on_SendPrivateMessageButton_clicked()
     string ReceivingEndName = ui->ServerMembersList->currentItem()->text().toStdString();
     SentPrivateMessage(ClientSocket,"Hello this is private",ReceivingEndName);
 
+}
+
+
+void MainApplication::on_pushButton_clicked()
+{
+    EndConnection();
 }
 

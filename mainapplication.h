@@ -35,6 +35,8 @@ private slots:
 
     void on_SendPrivateMessageButton_clicked();
 
+    void on_pushButton_clicked();
+
 private:
     int StartConnection(SOCKET& ClientSocket);
     int EndConnection();
