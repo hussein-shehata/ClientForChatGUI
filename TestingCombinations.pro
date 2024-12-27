@@ -13,17 +13,20 @@ SOURCES += \
     BackEnd/ClientMessageClass.cpp \
     inputdialog.cpp \
     main.cpp \
-    mainapplication.cpp
+    mainapplication.cpp \
+    privatechatwidget.cpp
 
 HEADERS += \
     BackEnd/ClientCode.hpp \
     BackEnd/ClientMessageClass.hpp \
     inputdialog.h \
-    mainapplication.h
+    mainapplication.h \
+    privatechatwidget.h
 
 FORMS += \
     inputdialog.ui \
-    mainapplication.ui
+    mainapplication.ui \
+    privatechatwidget.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

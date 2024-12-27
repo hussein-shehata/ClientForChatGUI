@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QStringListModel>
 #include "winsock2.h"
+#include "BackEnd/ClientCode.hpp"
 #include <thread>
 
 QT_BEGIN_NAMESPACE
@@ -25,8 +26,8 @@ public:
     SOCKET ClientSocket;
     QString ClientName;
     QString MessageToBeSent;
-    QString MessageToBeDisplayed;
     void UpdateViewChat();
+    void UpdatePrivateChats(const ClientMessage& MessageToBeDisplayed);
 
 private slots:
     void on_ConnectButton_clicked();
@@ -39,7 +40,7 @@ private slots:
 
 private:
     int StartConnection(SOCKET& ClientSocket);
-    int EndConnection();
+    void EndConnection();
     void AddStringToViewChat(const QString& Message);
     void UpdateMemberList();
     bool ClientIsConnected = false;

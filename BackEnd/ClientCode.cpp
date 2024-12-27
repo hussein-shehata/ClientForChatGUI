@@ -24,6 +24,8 @@ ClientMessage ClientMessageReceived;
 int MaxLength = 52000;
 bool FinishedReceivingNamesFromServer = true;
 
+bool DisconnectedClient = false;
+
 // #define ENABLE_VIRTUAL_TERMINAL_PROCESSING 0x0004
 
 void enableANSI() {
@@ -86,28 +88,30 @@ void SendToServerMessage(SOCKET ServerSocket, int MaxLength, string Message)
     cout<<"Message to Be Sent"<<Message<<endl;
 	char Buffer[52000];
 	int Length = ClientMessageToBeSent.Serialize(Buffer);
-
+	int ByteCount = send(ServerSocket, Buffer, Length, 0);
     if(Message == "#Exit")
     {
         ClientMessageToBeSent.SetExitFlag(false);
+        // Do handshake to confirm that the server removed this client.
+        // we will break from the below infinite loop when we receive "#Deleted" message from the server, we will parse it in "UpdateViewChat" method.
+        while(true)
+        {
+            if(DisconnectedClient == true)
+            {
+                break;
+            }
+        }
     }
-
-	//      if(Buffer[ClientNameLength + 3 ] == '\n' ||  Buffer[ClientNameLength + 3 ] == '\0')
-	//	{
-	//	  //Do not send enter alone
-	//	  cout<<"You only entered an enter alone"<<endl;
-	//	  continue;
-	//	}
-	int ByteCount = send(ServerSocket, Buffer, Length, 0);
 
 	if(ByteCount > 0)
 	{
-        cout<<"Sent Successfully"<<endl;
+        // cout<<"Sent Successfully"<<endl;
 	}
 	else
 	{
-        cout<<"Send Failed"<<endl;
-		WSACleanup();
+        // cout<<"Send Failed"<<endl;
+        //NOTE will comment this for testing behavior
+		// WSACleanup();
 	}
 }
 
@@ -135,7 +139,7 @@ void SentPrivateMessage(SOCKET ServerSocket, string Message, string ReceivingCli
 
 
 
-string ReceiveFromServer(SOCKET ServerSocket, int MaxLength, Flags& ReceivedFlags) //TODO we can make a parameter to receive the incoming string if we want to
+ClientMessage ReceiveFromServer(SOCKET ServerSocket, int MaxLength, Flags& ReceivedFlags) //TODO we can make a parameter to receive the incoming string if we want to
 {
   while(1)
     {
@@ -148,7 +152,7 @@ string ReceiveFromServer(SOCKET ServerSocket, int MaxLength, Flags& ReceivedFlag
         {
             ClientMessageReceived.Deserialize(Buffer);
             ReceivedFlags = ClientMessageReceived.GetFlags();
-            return ( ClientMessageReceived.GetName() + " : " + ClientMessageReceived.GetClientMessage() );
+            return (ClientMessageReceived );
         }
         else
         {

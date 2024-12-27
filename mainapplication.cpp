@@ -4,6 +4,7 @@
 #include "BackEnd/ClientCode.hpp"
 #include "winsock2.h"
 #include <psdk_inc/_socket_types.h>
+#include "privatechatwidget.h"
 #include <thread>
 
 MainApplication::MainApplication(QWidget *parent)
@@ -24,15 +25,20 @@ MainApplication::~MainApplication()
     delete ui;
 }
 
-int MainApplication::EndConnection()
+void MainApplication::EndConnection()
 {
-    // shutdown(ClientSocket, SD_BOTH); // Disable further sends and receives
-    // closesocket(ClientSocket);       // Close the socket descriptor
+    if(DisconnectedClient == true)
+    {
+        // Arleady Disconnected
+        cout<<"Arleady Disconnected"<<endl;
+        return;
+    }
     QString ClientMessage = "#Exit";
     SendToServerMessage(ClientSocket, 52000, ClientMessage.toStdString());
     closesocket(ClientSocket);
     // Cleanup Winsock
-    // WSACleanup();
+    WSACleanup();
+    cout<<"We Ended Connection"<<endl;
 }
 
 int MainApplication::StartConnection(SOCKET& clientSocket)
@@ -82,6 +88,7 @@ int MainApplication::StartConnection(SOCKET& clientSocket)
     }
     else
     {
+        DisconnectedClient = false;
         return 1;
     }
 }
@@ -153,17 +160,30 @@ void MainApplication::UpdateViewChat()
         {
             continue;
         }
-        MessageToBeDisplayed = QString::fromStdString(ReceiveFromServer(ClientSocket,52000, ReceivedFlags)) ;
+        ClientMessage MessageToBeDisplayed = (ReceiveFromServer(ClientSocket,52000, ReceivedFlags)) ;
+        if(MessageToBeDisplayed.GetClientMessage() == "#Deleted")
+        {
+            DisconnectedClient = true;
+            // Cleanup Winsock
+            break;
+        }
         if(ReceivedFlags.NotifyingNewMemberFlag == 1)
         {
             UpdateMemberList();
         }
         if(ReceivedFlags.PrivateMessageFlag == 1)
         {
-            MessageToBeDisplayed = "PRIVATE FROM " + MessageToBeDisplayed;
+            // Display the private message in the tab for the sender
+            UpdatePrivateChats(MessageToBeDisplayed);
         }
-        AddStringToViewChat(MessageToBeDisplayed);
+        string ParsedMessage = MessageToBeDisplayed.GetName() + " : " + MessageToBeDisplayed.GetClientMessage();
+        AddStringToViewChat(QString::fromStdString(ParsedMessage));
     }
+}
+
+void MainApplication::UpdatePrivateChats(const ClientMessage& MessageToBeDisplayed)
+{
+    // TODO Make a new tab if the sender name is not in the arleady opened tabs
 }
 
 void MainApplication::UpdateMemberList()
@@ -190,8 +210,9 @@ void MainApplication::on_SendPrivateMessageButton_clicked()
 {
 
     ui->ServerMembersList->currentItem();
-    string ReceivingEndName = ui->ServerMembersList->currentItem()->text().toStdString();
-    SentPrivateMessage(ClientSocket,"Hello this is private",ReceivingEndName);
+    QString ReceivingEndName = ui->ServerMembersList->currentItem()->text();
+    // SentPrivateMessage(ClientSocket,"Hello this is private",ReceivingEndName);
+    ui->tabWidget->insertTab(ui->tabWidget->count(), new PrivateChatWidget(ui->tabWidget, ClientSocket, ReceivingEndName), QIcon(QString("")) ,ReceivingEndName);
 
 }
 

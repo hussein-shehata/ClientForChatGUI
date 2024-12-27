@@ -18,13 +18,14 @@
 
 #include "ClientMessageClass.hpp"
 using namespace std;
+extern bool DisconnectedClient;
 
 void enableANSI();
 void ClearAboveLine(void);
 void SendNameToServer(SOCKET& ServerSocket, string ClientName);
 void SendToServer(SOCKET ServerSocket, int MaxLength);
 void SentPrivateMessage(SOCKET ServerSocket, string Message, string ReceivingClientName);
-string ReceiveFromServer(SOCKET ServerSocket, int MaxLength, Flags& ReceivedFlags);
+ClientMessage ReceiveFromServer(SOCKET ServerSocket, int MaxLength, Flags& ReceivedFlags);
 int inet_ptonnn(int af, const char *src, void *dst);
 void SetColor(int textColor);
 int Run();
